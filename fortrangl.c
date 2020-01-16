@@ -24,17 +24,19 @@
 #define __DEBUG__ 1
 #endif
 
-
+// Fortran callback functions
 extern void glfresize_func(GLFWwindow *window, int width, int height);
 extern void glfkey_func(GLFWwindow *window, int key, int scancode, int action, int mods);
 extern void glfcursor_func(GLFWwindow *window, double xpos, double ypos);
 extern void glfmousebutton_func(GLFWwindow *window, int button, int action, int mods);
+
 
 static void error_callback(int error, const char* description)
 {
     fputs(description, stderr);
 }
 
+// Convert a Fortran string to a C string
 static char *f_str_to_c_str(CFI_cdesc_t *data)
 {
   assert(data);
@@ -54,24 +56,28 @@ static char *f_str_to_c_str(CFI_cdesc_t *data)
 
   return cstr;
 }
-		    
-GLFWwindow *glfInit(int width, int height)
+
+// Init glf
+GLFWwindow *glfInit(int width, int height, int major, int minor, CFI_cdesc_t *data)
 {
   GLFWwindow *window;
-
+  char *window_name = f_str_to_c_str(data);
+  
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) {
     exit(EXIT_FAILURE);
   }
   
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, major);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, minor);
   #ifdef __APPLE__
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   #endif
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  window = glfwCreateWindow(640, 480, "FortranGL", NULL, NULL);
+  window = glfwCreateWindow(640, 480, window_name, NULL, NULL);
+  free(window_name);
+  
   if (!window) {
     glfwTerminate();
     exit(EXIT_FAILURE);

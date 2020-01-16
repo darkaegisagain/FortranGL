@@ -13,6 +13,9 @@
 
 module glf
   use, intrinsic :: iso_c_binding
+
+  ! A Vertex is a derived type that the programmer is required to fill in if
+  ! the want to use something other than Position / Color information
   type, bind(C) :: Vertex
      real(c_float) :: x, y, z, w
      real(c_float) :: r, g, b, a
@@ -22,12 +25,12 @@ module glf
      ! *********************************************************************************
      ! glf window calls
      ! *********************************************************************************
-     function glfInit(width, height) bind(C, name="glfInit")
+     function glfInit(width, height, major, minor, window_name) bind(C, name="glfInit")
        use, intrinsic :: iso_c_binding
        implicit none
        type(c_ptr) :: glfInit
-       integer(c_int),intent(in),value :: width
-       integer(c_int),intent(in),value :: height
+       integer(c_int),intent(in),value :: width, height, major, minor
+       character(len=*),intent(in) :: window_name
      end function glfInit
 
      subroutine glfSetCurrentContext(window) bind(C, name="glfwMakeContextCurrent")
@@ -146,6 +149,7 @@ module glf
        type(c_ptr),intent(in) :: data
      end subroutine glfElementBufferSubData
  
+
 
      ! *********************************************************************************
      ! glf uniform buffer calls
@@ -357,6 +361,9 @@ Program test_fortrangl
   character(len=4096) :: vertex_shader, fragment_shader
   character (len=*),parameter :: NL = char(10) !hack for #version requiring a /n char for parser
 
+  ! Ok this is buggy in GLSL... I need to parse these in C a bit more
+  ! The problem is you need to add new lines after // like comments so don't use them use /* */ comments
+  ! And you need to use new line operators in #version pragmas or the GLSL compiler will barf
   vertex_shader = "#version 330 core"//NL//"&
   &layout (location = 0) in vec4 aPos;   /* the position variable has attribute position 0 */ &
   &layout (location = 1) in vec4 aColor; /* the color variable has attribute position 1 */ &
@@ -375,11 +382,14 @@ Program test_fortrangl
   &FragColor = ourColor; &
   &}"
 
-  window = glfInit(640, 480)
+  window = glfInit(640, 480, 3, 3, "FortranGL")
 
+  ! compile shaders returns 0 on failure a valid program on success
+  ! the program is bound as the currently in use program
   program = glfCompileShaders(vertex_shader, fragment_shader)
   if (program == 0) stop
-
+  
+  ! Test this function... it doesn't crash...
   ubo_block_index = glfUniformBlockIndex(program, "uniform_data")
   
   allocate(vertex_buffer(1:4096))
@@ -392,21 +402,31 @@ Program test_fortrangl
   call glfSetVertexCol(vertex_buffer, 2,  0.0,  1.0, 0.0, 1.0)
   call glfSetVertexCol(vertex_buffer, 3,  0.0,  0.0, 1.0, 1.0)
 
-
+  ! Bind array buffer before creating VAO
   buffer = glfGenArrayBuffer()
   if (buffer == 0) stop
   call glfBindArrayBuffer(buffer)
 
+  ! OpenGL 3.3 requires a VAO binding for draw operations
   vao_buffer = glfGenVAO()
   if (vao_buffer == 0) stop
   call glfBindVAO(vao_buffer)
   
-
+  ! Array buffer data takes a pointer descriptor and figures out how big
+  ! the allocation is so size isn't needed
   call glfArrayBufferData(vertex_buffer)
- 
+
+  ! A vertex descriptor in the form of F4F4 says you have 2 attributes
+  ! Attribute 0 is a Float 4 config with 4 floats
+  ! Attribute 1 is a Float 4 config with 4 floats
+  ! You can use F,I,D for GL_FLOAT,GL_INTEGER,GL_DOUBLE
+  ! You can use up to (GL_MAX_VERTEX_ATTRIBS) attribs
+  ! The type, type_count and number of attribs forms the pitch
+  ! for the vertex pointer all
   err = glfBindVertexAttribPointers("F4F4") 
   if (err /= 0) stop
-  
+
+  ! Set clear color for clear buffers call
   call glfClearColor(0.0, 0.0, 0.0, 1.0)
 
   do while (glfWindowShouldClose(window) == 0)
