@@ -1,3 +1,15 @@
+/*
+  Created by Michael Larson
+  January 13 2020
+
+  I don't care how this is used and I am not repsonsible for it's use, just keep
+  my name at the top of the source.
+
+  Thanks
+
+  Michael Larson
+*/
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
