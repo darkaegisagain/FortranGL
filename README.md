@@ -1,7 +1,7 @@
 # FortranGL
 Interface to OpenGL 4.5+ using GLFW and GLEW on C side with Fortran interface routines
 
-This is intended to be copied and modified, there are too many type requirements to really make a generalized interface with OpenGL 4.5 and beyond. The C interface routines combine a bunch of mondain calls so you don't have to define each one... just
+This is intended to be copied and modified, there are too many type requirements to really make a generalized interface with OpenGL 4.5 and beyond. The C interface routines combine a bunch of mondane calls so you don't have to define each one... just
 call them with an interace function.
 
 The simplest case is the cube.f90
