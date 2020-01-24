@@ -618,3 +618,61 @@ void glfDrawElements(GLuint type, GLuint start, GLuint count, CFI_cdesc_t *data)
   
   glDrawElements(type, count, GL_UNSIGNED_INT, indices);
 }
+
+
+/****************************************************************************************/
+/* DisplayBuffer dump to TGA files
+/****************************************************************************************/
+GLuint glfDumpFramebufferToTGA(GLFWwindow *window, CFI_cdesc_t *data)
+{
+  char *filename = f_str_to_c_str(data);
+  struct {
+    unsigned char id_len;
+    unsigned char color_map_type;
+    unsigned char image_type;
+    unsigned char color_map_spec[5];
+    unsigned char image_spec[10];
+  } tga_header;
+  unsigned width, height;
+
+  glfwGetFramebufferSize(window, &width, &height);
+  
+  tga_header.id_len = sizeof(tga_header);
+  tga_header.color_map_type = 0;
+  tga_header.image_type = 2;
+  bzero(tga_header.color_map_spec, sizeof(tga_header.color_map_spec));
+  tga_header.image_spec[0] = 0;
+  tga_header.image_spec[1] = 0;
+  tga_header.image_spec[2] = 0;
+  tga_header.image_spec[3] = 0;
+  
+  tga_header.image_spec[4] = width & 0xff;
+  tga_header.image_spec[5] = (width >> 8) & 0xff;
+  tga_header.image_spec[6] = height & 0xff;
+  tga_header.image_spec[7] = (height >> 8) & 0xff;
+  tga_header.image_spec[8] = 24;
+  tga_header.image_spec[9] = 0x0;
+
+  FILE *fp = fopen(filename, "w");
+  assert(fp);
+
+  fwrite(&tga_header, sizeof(tga_header), 1, fp);
+
+  size_t len = width * height * sizeof(unsigned);
+  unsigned *pixels = (unsigned *)malloc(len);
+  
+  glFinish();
+
+  glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+  fwrite(pixels, len, 1, fp);
+
+  fclose(fp);
+}
+
+
+  
+  
+  
+
+      

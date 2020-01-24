@@ -260,7 +260,7 @@ module glf
 
 
      ! *********************************************************************************
-     ! GLSL programm calls
+     ! GLSL program calls
      ! *********************************************************************************
      function glfCompileShaderFiles(vertex_filename, fragment_filename) bind(C, name="glfCompileShaderFiles")
        use, intrinsic :: iso_c_binding
@@ -373,7 +373,14 @@ module glf
        type(Mat4),intent(inout),pointer :: mat
        real(c_float),intent(in),value :: x, y, z
      end subroutine glfScale
-       
+
+     subroutine glfDumpFramebufferToTGA(window, filename) bind(C, name="glfDumpFramebufferToTGA")
+       use, intrinsic :: iso_c_binding
+       import Mat4
+       type(c_ptr),intent(in),value :: window
+       character(len=*),intent(in) :: filename
+     end subroutine glfDumpFramebufferToTGA
+     
     end interface
 
 

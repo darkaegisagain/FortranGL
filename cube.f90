@@ -143,7 +143,7 @@ Program cube
   real(c_float) :: fov, aspect
   type(Mat4),pointer :: Model, View, Projection, MVP
   real(c_float) :: angle
-  
+  integer :: frame_count
   
   ! Request a 640x480 window with a OpenGL context of 3.3 minium and "FortranGL" as the name
   window = glfInit(640, 480, 4, 2, "Cube FortranGL")
@@ -231,6 +231,7 @@ Program cube
   call glfEnable(GL_DEPTH_TEST)
 
   angle = 0.0
+  frame_count = 0
   do while (glfWindowShouldClose(window) == 0)
      call glfSetCurrentContext(window)
 
@@ -249,6 +250,13 @@ Program cube
      
      call glfSwapBuffers(window)
      call glfPollEvents()
+
+     frame_count = frame_count + 1
+
+     if (frame_count == 45) then
+        call glfDumpFramebufferToTGA(window, "cube.tga")
+     end if
+     
   end do
 
 End Program cube
